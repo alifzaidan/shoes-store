@@ -43,6 +43,7 @@ export default function EditProduct({ product }: { product: Product }) {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            image: null,
             title: product.title,
             description: product.description,
             price: product.price,
@@ -51,7 +52,20 @@ export default function EditProduct({ product }: { product: Product }) {
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        router.put(route('products.update', { id: product.id }), values);
+        const formData = new FormData();
+        formData.append('title', values.title);
+        formData.append('description', values.description);
+        formData.append('price', values.price.toString());
+        formData.append('stock', values.stock.toString());
+
+        if (values.image) {
+            formData.append('image', values.image);
+        }
+        formData.append('_method', 'put');
+
+        router.post(route('products.update', { id: product.id }), formData, {
+            forceFormData: true,
+        });
     }
 
     return (

@@ -60,7 +60,6 @@ class ProductController extends Controller
 
         $product = Product::findOrFail($id);
 
-        return redirect()->route('products.index')->with('success', 'Produk berhasil diperbarui.');
         if ($request->hasFile('image')) {
             Storage::disk('public')->delete($product->image);
 
