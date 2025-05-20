@@ -1,3 +1,4 @@
+import { Toaster } from '@/components/ui/sonner';
 import AppLayoutTemplate from '@/layouts/app/app-header-layout';
 import AdminLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import { SharedData, type BreadcrumbItem } from '@/types';
@@ -17,6 +18,7 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
         return (
             <AdminLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
                 {children}
+                <Toaster />
             </AdminLayoutTemplate>
         );
     }
@@ -24,6 +26,7 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
     return (
         <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
             {children}
+            <Toaster />
         </AppLayoutTemplate>
     );
 };

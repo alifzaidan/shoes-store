@@ -1,7 +1,9 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 import { columns, Product } from './columns';
 import { DataTable } from './data-table';
 
@@ -17,6 +19,17 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Products({ products }: { products: Product[] }) {
+    const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
+
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Products" />
