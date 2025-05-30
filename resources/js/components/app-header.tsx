@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
@@ -14,20 +13,13 @@ import { Link, usePage } from '@inertiajs/react';
 import { Home, Menu, ShoppingCart } from 'lucide-react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: '/',
         icon: Home,
-    },
-];
-
-const rightNavItems: NavItem[] = [
-    {
-        title: 'Cart',
-        href: '/',
-        icon: ShoppingCart,
     },
 ];
 
@@ -70,18 +62,22 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                         </div>
 
                                         <div className="flex flex-col space-y-4">
-                                            {rightNavItems.map((item) => (
-                                                <a
-                                                    key={item.title}
-                                                    href={item.href}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex items-center space-x-2 font-medium"
-                                                >
-                                                    {item.icon && <Icon iconNode={item.icon} className="h-5 w-5" />}
-                                                    <span>{item.title}</span>
-                                                </a>
-                                            ))}
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="group text-accent-foreground ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md bg-transparent p-0 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+                                                    >
+                                                        <span className="sr-only">Cart</span>
+                                                        <Icon iconNode={ShoppingCart} className="size-5 opacity-80 group-hover:opacity-100" />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="ms-4 w-80">
+                                                    <div className="mb-2 font-semibold">Keranjang</div>
+                                                    <div className="text-muted-foreground text-sm">Keranjang belanja kamu masih kosong.</div>
+                                                    {/* Di sini nanti bisa render list cart items */}
+                                                </PopoverContent>
+                                            </Popover>
                                         </div>
                                     </div>
                                 </div>
@@ -122,26 +118,54 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     <div className="ml-auto flex items-center space-x-2">
                         <div className="relative flex items-center space-x-1">
                             <div className="hidden lg:flex">
-                                {rightNavItems.map((item) => (
-                                    <TooltipProvider key={item.title} delayDuration={0}>
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <a
-                                                    href={item.href}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="group text-accent-foreground ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md bg-transparent p-0 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
-                                                >
-                                                    <span className="sr-only">{item.title}</span>
-                                                    {item.icon && <Icon iconNode={item.icon} className="size-5 opacity-80 group-hover:opacity-100" />}
-                                                </a>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{item.title}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                ))}
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            className="group text-accent-foreground ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md bg-transparent p-0 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+                                        >
+                                            <span className="sr-only">Cart</span>
+                                            <Icon iconNode={ShoppingCart} className="size-5 opacity-80 group-hover:opacity-100" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80">
+                                        <div className="mb-2 font-semibold">Keranjang</div>
+                                        {/* <div className="text-muted-foreground text-sm">Keranjang belanja kamu masih kosong.</div> */}
+                                        <div className="divide-y">
+                                            <div className="flex items-center gap-3 py-2">
+                                                <img
+                                                    src="/storage/contoh-sepatu.jpg"
+                                                    alt="Sepatu Keren"
+                                                    className="h-12 w-12 rounded border object-cover"
+                                                />
+                                                <div className="flex-1">
+                                                    <div className="font-medium">Sepatu Keren</div>
+                                                    <div className="text-muted-foreground text-xs">1 x Rp200.000</div>
+                                                </div>
+                                                <div className="text-sm font-semibold">Rp200.000</div>
+                                            </div>
+                                            <div className="flex items-center gap-3 py-2">
+                                                <img
+                                                    src="/storage/contoh-sandal.jpg"
+                                                    alt="Sandal Santai"
+                                                    className="h-12 w-12 rounded border object-cover"
+                                                />
+                                                <div className="flex-1">
+                                                    <div className="font-medium">Sandal Santai</div>
+                                                    <div className="text-muted-foreground text-xs">2 x Rp50.000</div>
+                                                </div>
+                                                <div className="text-sm font-semibold">Rp100.000</div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-between font-semibold">
+                                            <span>Total</span>
+                                            <span>Rp300.000</span>
+                                        </div>
+                                        <Button className="mt-4 w-full" size="sm">
+                                            Checkout
+                                        </Button>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                         </div>
                         <DropdownMenu>
