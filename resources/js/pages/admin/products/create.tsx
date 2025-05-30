@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { parseRupiah, rupiahFormatter } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -13,6 +14,7 @@ import { z } from 'zod';
 
 const formSchema = z.object({
     image: z.any(),
+    category_id: z.number(),
     title: z.string().min(1, {
         message: 'Nama produk tidak boleh kosong',
     }),
@@ -38,7 +40,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CreateProduct() {
+export default function CreateProduct({ categories }: { categories: { id: number; name: string }[] }) {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -61,6 +63,33 @@ export default function CreateProduct() {
                     <h1 className="mb-8 text-2xl font-semibold">Tambah Produk</h1>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                            <FormField
+                                control={form.control}
+                                name="category_id"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Kategori</FormLabel>
+                                        <Select
+                                            onValueChange={(val) => field.onChange(Number(val))}
+                                            value={field.value ? field.value.toString() : ''}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a category" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {categories.map((category) => (
+                                                    <SelectItem key={category.id} value={category.id.toString()}>
+                                                        {category.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             <FormField
                                 control={form.control}
                                 name="image"

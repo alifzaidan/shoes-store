@@ -6,20 +6,12 @@ import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Edit, MoreHorizontal, Trash } from 'lucide-react';
 
-export type Product = {
+export type Category = {
     id: string;
-    category_id: number;
-    category: {
-        name: string;
-    };
-    title: string;
-    description: string;
-    price: number;
-    stock: number;
-    image: string;
+    name: string;
 };
 
-export const columns: ColumnDef<Product>[] = [
+export const columns: ColumnDef<Category>[] = [
     {
         accessorKey: 'no',
         header: 'No',
@@ -30,48 +22,13 @@ export const columns: ColumnDef<Product>[] = [
         },
     },
     {
-        accessorKey: 'category.name',
-        header: 'Kategori',
-    },
-    {
-        accessorKey: 'title',
-        header: 'Nama Produk',
-    },
-    {
-        accessorKey: 'description',
-        header: 'Deskripsi Produk',
-    },
-    {
-        accessorKey: 'price',
-        header: 'Harga',
-        cell: ({ row }) => {
-            const price = parseFloat(row.getValue('price'));
-            const formatted = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-            }).format(price);
-
-            return <div className="font-medium">{formatted}</div>;
-        },
-    },
-    {
-        accessorKey: 'stock',
-        header: 'Stok Produk',
-    },
-    {
-        accessorKey: 'image',
-        header: 'Gambar',
-        cell: ({ row }) => {
-            const title = row.original.title;
-            const image = row.original.image;
-            const imageUrl = image ? `/storage/${image}` : '/placeholder.png';
-            return <img src={imageUrl} alt={title} className="h-16 w-16 rounded object-cover" />;
-        },
+        accessorKey: 'name',
+        header: 'Nama Kategori',
     },
     {
         id: 'actions',
         cell: ({ row }) => {
-            const product = row.original;
+            const category = row.original;
 
             return (
                 <DropdownMenu>
@@ -84,14 +41,14 @@ export const columns: ColumnDef<Product>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem>
                             <Button variant="link" asChild>
-                                <Link href={route('products.edit', product.id)}>
+                                <Link href={route('categories.edit', category.id)}>
                                     <Edit /> Edit
                                 </Link>
                             </Button>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                             <Button variant="link" asChild>
-                                <Link method="delete" href={route('products.destroy', product.id)}>
+                                <Link method="delete" href={route('categories.destroy', category.id)}>
                                     <Trash /> Hapus
                                 </Link>
                             </Button>

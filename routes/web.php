@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,7 @@ Route::middleware(['auth', EnsureAdmin::class])->group(function () {
     })->name('admin.dashboard');
 
     Route::resource('/admin/products', ProductController::class);
+    Route::resource('/admin/categories', CategoryController::class);
 });
 
 require __DIR__ . '/settings.php';

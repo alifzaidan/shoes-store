@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { parseRupiah, rupiahFormatter } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -14,6 +15,7 @@ import { Product } from './columns';
 
 const formSchema = z.object({
     image: z.any(),
+    category_id: z.number(),
     title: z.string().min(1, {
         message: 'Nama produk tidak boleh kosong',
     }),
@@ -39,10 +41,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function EditProduct({ product }: { product: Product }) {
+export default function EditProduct({ product, categories }: { product: Product; categories: { id: number; name: string }[] }) {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            category_id: product.category_id,
             image: null,
             title: product.title,
             description: product.description,
@@ -53,6 +56,7 @@ export default function EditProduct({ product }: { product: Product }) {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         const formData = new FormData();
+        formData.append('category_id', values.category_id.toString());
         formData.append('title', values.title);
         formData.append('description', values.description);
         formData.append('price', values.price.toString());
@@ -76,6 +80,33 @@ export default function EditProduct({ product }: { product: Product }) {
                     <h1 className="mb-8 text-2xl font-semibold">Edit Produk</h1>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                            <FormField
+                                control={form.control}
+                                name="category_id"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Kategori</FormLabel>
+                                        <Select
+                                            onValueChange={(val) => field.onChange(Number(val))}
+                                            value={field.value ? field.value.toString() : ''}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a category" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {categories.map((category) => (
+                                                    <SelectItem key={category.id} value={category.id.toString()}>
+                                                        {category.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             <FormField
                                 control={form.control}
                                 name="image"

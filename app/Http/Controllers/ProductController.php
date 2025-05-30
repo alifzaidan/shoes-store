@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -11,19 +12,22 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::latest()->get();
-
-        return Inertia::render('admin/products/index', ['products' => $products,]);
+        $products = Product::with('category')
+            ->latest()
+            ->get();
+        return Inertia::render('admin/products/index', ['products' => $products]);
     }
 
     public function create()
     {
-        return Inertia::render('admin/products/create');
+        $categories = Category::all();
+        return Inertia::render('admin/products/create', ['categories' => $categories]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
+            'category_id' => 'required|exists:categories,id',
             'image' => 'required|image|mimes:jpeg,jpg,png|max:2048',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -45,12 +49,14 @@ class ProductController extends Controller
     public function edit(string $id)
     {
         $product = Product::findOrFail($id);
-        return Inertia::render('admin/products/edit', ['product' => $product]);
+        $categories = Category::all();
+        return Inertia::render('admin/products/edit', ['product' => $product, 'categories' => $categories]);
     }
 
     public function update(Request $request, string $id)
     {
         $request->validate([
+            'category_id' => 'required|exists:categories,id',
             'image' => 'image|mimes:jpeg,jpg,png|max:2048',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -66,6 +72,7 @@ class ProductController extends Controller
             $image = $request->file('image');
             $imagePath = $image->store('products', 'public');
             $product->update([
+                'category_id' => $request->category_id,
                 'image' => $imagePath,
                 'title' => $request->title,
                 'description' => $request->description,
@@ -74,6 +81,7 @@ class ProductController extends Controller
             ]);
         } else {
             $product->update([
+                'category_id' => $request->category_id,
                 'title' => $request->title,
                 'description' => $request->description,
                 'price' => $request->price,
