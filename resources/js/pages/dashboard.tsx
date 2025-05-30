@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -11,7 +11,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Dashboard() {
+export default function Dashboard({
+    products,
+}: {
+    products: { id: number; title: string; category: { name: string }; price: number; image: string }[];
+}) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -37,27 +41,24 @@ export default function Dashboard() {
                 </div>
                 <h1 className="text-2xl font-semibold">Produk Kita</h1>
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border overflow-hidden rounded-xl border p-4">
-                        <img src="/images/nike-shox-tl.jpg" alt="Adidas Samba" className="rounded-lg" />
-                        <h2 className="mt-2 text-lg font-semibold">Nike Shox TL</h2>
-                        <p className="text-sm text-gray-500">Sepatu Pria</p>
-                        <p className="text-lg font-semibold">Rp 2.600.000</p>
-                        <Button className="mt-2 w-full">Lihat Produk</Button>
-                    </div>
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border overflow-hidden rounded-xl border p-4">
-                        <img src="/images/nike-air-force-1.jpg" alt="Adidas Samba" className="rounded-lg" />
-                        <h2 className="mt-2 text-lg font-semibold">Nike Air Force 1</h2>
-                        <p className="text-sm text-gray-500">Sepatu Wanita</p>
-                        <p className="text-lg font-semibold">Rp 1.500.000</p>
-                        <Button className="mt-2 w-full">Lihat Produk</Button>
-                    </div>
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border overflow-hidden rounded-xl border p-4">
-                        <img src="/images/nike-air-max-systm.jpg" alt="Adidas Samba" className="rounded-lg" />
-                        <h2 className="mt-2 text-lg font-semibold">Nike Air Max SYSTM</h2>
-                        <p className="text-sm text-gray-500">Sepatu Anak-anak</p>
-                        <p className="text-lg font-semibold">Rp 800.000</p>
-                        <Button className="mt-2 w-full">Lihat Produk</Button>
-                    </div>
+                    {products.map((product) => (
+                        <div key={product.id} className="border-sidebar-border/70 dark:border-sidebar-border overflow-hidden rounded-xl border p-4">
+                            <img src={`/storage/${product.image}`} alt={product.title} className="rounded-lg" />
+                            <h2 className="mt-2 text-lg font-semibold">{product.title}</h2>
+                            <p className="text-sm text-gray-500">{product.category?.name}</p>
+                            <p className="text-lg font-semibold">
+                                {new Intl.NumberFormat('id-ID', {
+                                    style: 'currency',
+                                    currency: 'IDR',
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 0,
+                                }).format(product.price)}
+                            </p>
+                            <Button className="mt-2 w-full" asChild>
+                                <Link href={route('product.show', product.id)}>Lihat Produk</Link>
+                            </Button>
+                        </div>
+                    ))}
                 </div>
             </div>
         </AppLayout>

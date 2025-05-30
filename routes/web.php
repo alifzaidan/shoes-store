@@ -7,9 +7,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('/', [ProductController::class, 'dashboard'])->name('dashboard');
+    Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
 });
 
 Route::middleware(['auth', EnsureAdmin::class])->group(function () {

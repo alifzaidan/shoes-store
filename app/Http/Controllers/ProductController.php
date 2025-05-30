@@ -10,11 +10,15 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
+    public function dashboard()
+    {
+        $products = Product::with('category')->latest()->take(6)->get();
+        return Inertia::render('dashboard', ['products' => $products]);
+    }
+
     public function index()
     {
-        $products = Product::with('category')
-            ->latest()
-            ->get();
+        $products = Product::with('category')->latest()->get();
         return Inertia::render('admin/products/index', ['products' => $products]);
     }
 
@@ -100,8 +104,9 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus.');
     }
 
-    public function show()
+    public function show($id)
     {
-        return redirect()->route('products.index');
+        $product = Product::with('category')->findOrFail($id);
+        return Inertia::render('detail-product', ['product' => $product]);
     }
 }
