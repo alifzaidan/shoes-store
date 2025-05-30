@@ -9,6 +9,13 @@ use Inertia\Inertia;
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [ProductController::class, 'dashboard'])->name('dashboard');
     Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
+
+    Route::get('/invoice/show', function () {
+        return Inertia::render('invoice');
+    })->name('invoice.show');
+    Route::get('/invoice/show/{id}', function () {
+        return Inertia::render('invoice-detail');
+    })->name('invoice.showDetail');
 });
 
 Route::middleware(['auth', EnsureAdmin::class])->group(function () {
