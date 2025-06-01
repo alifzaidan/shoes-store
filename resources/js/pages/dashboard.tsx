@@ -55,7 +55,7 @@ export default function Dashboard({
                                 }).format(product.price)}
                             </p>
                             <Button className="mt-2 w-full" asChild>
-                                <Link href={route('product.show', product.id)}>Lihat Produk</Link>
+                                <Link href={route('product.detail', product.id)}>Lihat Produk</Link>
                             </Button>
                         </div>
                     ))}

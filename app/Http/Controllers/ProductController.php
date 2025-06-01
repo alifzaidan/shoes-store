@@ -10,12 +10,6 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function dashboard()
-    {
-        $products = Product::with('category')->latest()->take(6)->get();
-        return Inertia::render('dashboard', ['products' => $products]);
-    }
-
     public function index()
     {
         $products = Product::with('category')->latest()->get();
@@ -102,11 +96,5 @@ class ProductController extends Controller
         Storage::disk('public')->delete($product->image);
         $product->delete();
         return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus.');
-    }
-
-    public function show($id)
-    {
-        $product = Product::with('category')->findOrFail($id);
-        return Inertia::render('detail-product', ['product' => $product]);
     }
 }

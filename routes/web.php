@@ -1,14 +1,15 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/', [ProductController::class, 'dashboard'])->name('dashboard');
-    Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
+    Route::get('/', [HomeController::class, 'dashboard'])->name('dashboard');
+    Route::get('/product/{id}', [HomeController::class, 'detailProduct'])->name('product.detail');
 
     Route::get('/invoice/show', function () {
         return Inertia::render('invoice');
