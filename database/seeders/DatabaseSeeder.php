@@ -21,5 +21,8 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('admin'),
             'role' => 'admin',
         ]);
+
+        (new CategorySeeder())->run();
+        (new ProductSeeder())->run();
     }
 }

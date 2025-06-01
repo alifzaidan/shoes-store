@@ -1,12 +1,39 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
-export default function DetailProduct({
+export default function ProductDetail({
     product,
 }: {
     product: { id: number; title: string; category: { name: string }; description: string; price: number; image: string };
 }) {
+    const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
+
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
+
+    const { data, setData, post, processing, errors } = useForm({
+        product_id: product.id,
+        quantity: 1,
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route('cart.store'), {
+            onSuccess: () => {
+                window.dispatchEvent(new Event('cart-updated'));
+            },
+        });
+    };
+
     return (
         <AppLayout>
             <Head title={product.title} />
@@ -24,16 +51,20 @@ export default function DetailProduct({
                             maximumFractionDigits: 0,
                         }).format(product.price)}
                     </p>
-                    <form method="post" action="/keranjang/tambah">
-                        <input type="hidden" name="product_id" value={product.id} />
+                    <form onSubmit={handleSubmit}>
                         <input
                             type="number"
-                            name="qty"
+                            name="quantity"
                             min={1}
-                            defaultValue={1}
+                            value={data.quantity}
+                            onChange={(e) => setData('quantity', Number(e.target.value))}
                             className="mr-2 w-16 appearance-none rounded border px-1 py-1 text-center [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                         />
-                        <Button type="submit">Tambah ke Keranjang</Button>
+                        {errors.quantity && <div className="mt-1 text-sm text-red-500">{errors.quantity}</div>}
+
+                        <Button type="submit" disabled={processing}>
+                            Tambah ke Keranjang
+                        </Button>
                     </form>
                 </div>
             </div>

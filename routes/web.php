@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
@@ -10,6 +11,10 @@ use Inertia\Inertia;
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [HomeController::class, 'dashboard'])->name('dashboard');
     Route::get('/product/{id}', [HomeController::class, 'detailProduct'])->name('product.detail');
+
+    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::get('/cart/list', [CartController::class, 'getCart'])->name('cart.list');
+    Route::post('/cart/{id}/cancel', [CartController::class, 'cancel'])->name('cart.cancel');
 
     Route::get('/invoice/show', function () {
         return Inertia::render('invoice');

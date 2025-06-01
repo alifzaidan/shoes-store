@@ -9,8 +9,9 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
-import { Home, Menu, ShoppingCart } from 'lucide-react';
+import { Link, useForm, usePage } from '@inertiajs/react';
+import { Home, Menu, ShoppingCart, Trash } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -33,6 +34,35 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
+    const { post } = useForm();
+
+    interface CartItem {
+        id: number;
+        quantity: number;
+        price: number;
+        product: {
+            id: number;
+            title: string;
+            image: string;
+            price: number;
+        };
+    }
+
+    const [cart, setCart] = useState<CartItem[]>([]);
+
+    useEffect(() => {
+        const fetchCart = () => {
+            fetch(route('cart.list'))
+                .then((res) => res.json())
+                .then((data) => setCart(data));
+        };
+
+        fetchCart();
+
+        window.addEventListener('cart-updated', fetchCart);
+        return () => window.removeEventListener('cart-updated', fetchCart);
+    }, []);
+
     return (
         <>
             <div className="border-sidebar-border/80 border-b">
@@ -74,8 +104,60 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 </PopoverTrigger>
                                                 <PopoverContent className="ms-4 w-80">
                                                     <div className="mb-2 font-semibold">Keranjang</div>
-                                                    <div className="text-muted-foreground text-sm">Keranjang belanja kamu masih kosong.</div>
-                                                    {/* Di sini nanti bisa render list cart items */}
+                                                    {cart.length === 0 ? (
+                                                        <div className="text-muted-foreground text-sm">Keranjang belanja kamu masih kosong.</div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="divide-y">
+                                                                {cart.map((item) => (
+                                                                    <div key={item.id} className="flex items-center gap-3 py-2">
+                                                                        <img
+                                                                            src={`/storage/${item.product.image}`}
+                                                                            alt={item.product.title}
+                                                                            className="h-12 w-12 rounded border object-cover"
+                                                                        />
+                                                                        <div className="flex-1">
+                                                                            <div className="font-medium">{item.product.title}</div>
+                                                                            <div className="text-muted-foreground text-xs">
+                                                                                {item.quantity} x Rp{item.product.price.toLocaleString('id-ID')}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex flex-col items-end gap-1">
+                                                                            <div className="text-sm font-semibold">
+                                                                                Rp{(item.quantity * item.product.price).toLocaleString('id-ID')}
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                className="flex items-center text-xs text-red-500 hover:underline"
+                                                                                title="Hapus"
+                                                                                onClick={() => {
+                                                                                    post(route('cart.cancel', item.id), {
+                                                                                        onSuccess: () =>
+                                                                                            window.dispatchEvent(new Event('cart-updated')),
+                                                                                        preserveScroll: true,
+                                                                                    });
+                                                                                }}
+                                                                            >
+                                                                                <Trash className="mr-1 h-3 w-3" /> Hapus
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            <div className="mt-3 flex items-center justify-between font-semibold">
+                                                                <span>Total</span>
+                                                                <span>
+                                                                    Rp
+                                                                    {cart
+                                                                        .reduce((sum, item) => sum + item.quantity * item.product.price, 0)
+                                                                        .toLocaleString('id-ID')}
+                                                                </span>
+                                                            </div>
+                                                            <Button className="mt-4 w-full" size="sm">
+                                                                Checkout
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
@@ -130,40 +212,59 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     </PopoverTrigger>
                                     <PopoverContent className="w-80">
                                         <div className="mb-2 font-semibold">Keranjang</div>
-                                        {/* <div className="text-muted-foreground text-sm">Keranjang belanja kamu masih kosong.</div> */}
-                                        <div className="divide-y">
-                                            <div className="flex items-center gap-3 py-2">
-                                                <img
-                                                    src="/storage/contoh-sepatu.jpg"
-                                                    alt="Sepatu Keren"
-                                                    className="h-12 w-12 rounded border object-cover"
-                                                />
-                                                <div className="flex-1">
-                                                    <div className="font-medium">Sepatu Keren</div>
-                                                    <div className="text-muted-foreground text-xs">1 x Rp200.000</div>
+                                        {cart.length === 0 ? (
+                                            <div className="text-muted-foreground text-sm">Keranjang belanja kamu masih kosong.</div>
+                                        ) : (
+                                            <>
+                                                <div className="divide-y">
+                                                    {cart.map((item) => (
+                                                        <div key={item.id} className="flex items-center gap-3 py-2">
+                                                            <img
+                                                                src={`/storage/${item.product.image}`}
+                                                                alt={item.product.title}
+                                                                className="h-12 w-12 rounded border object-cover"
+                                                            />
+                                                            <div className="flex-1">
+                                                                <div className="font-medium">{item.product.title}</div>
+                                                                <div className="text-muted-foreground text-xs">
+                                                                    {item.quantity} x Rp{item.product.price.toLocaleString('id-ID')}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col items-end gap-1">
+                                                                <div className="text-sm font-semibold">
+                                                                    Rp{(item.quantity * item.product.price).toLocaleString('id-ID')}
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex items-center text-xs text-red-500 hover:underline"
+                                                                    title="Hapus"
+                                                                    onClick={() => {
+                                                                        post(route('cart.cancel', item.id), {
+                                                                            onSuccess: () => window.dispatchEvent(new Event('cart-updated')),
+                                                                            preserveScroll: true,
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    <Trash className="mr-1 h-3 w-3" /> Hapus
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <div className="text-sm font-semibold">Rp200.000</div>
-                                            </div>
-                                            <div className="flex items-center gap-3 py-2">
-                                                <img
-                                                    src="/storage/contoh-sandal.jpg"
-                                                    alt="Sandal Santai"
-                                                    className="h-12 w-12 rounded border object-cover"
-                                                />
-                                                <div className="flex-1">
-                                                    <div className="font-medium">Sandal Santai</div>
-                                                    <div className="text-muted-foreground text-xs">2 x Rp50.000</div>
+                                                <div className="mt-3 flex items-center justify-between font-semibold">
+                                                    <span>Total</span>
+                                                    <span>
+                                                        Rp
+                                                        {cart
+                                                            .reduce((sum, item) => sum + item.quantity * item.product.price, 0)
+                                                            .toLocaleString('id-ID')}
+                                                    </span>
                                                 </div>
-                                                <div className="text-sm font-semibold">Rp100.000</div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-3 flex items-center justify-between font-semibold">
-                                            <span>Total</span>
-                                            <span>Rp300.000</span>
-                                        </div>
-                                        <Button className="mt-4 w-full" size="sm">
-                                            Checkout
-                                        </Button>
+                                                <Button className="mt-4 w-full" size="sm">
+                                                    Checkout
+                                                </Button>
+                                            </>
+                                        )}
                                     </PopoverContent>
                                 </Popover>
                             </div>
