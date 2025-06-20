@@ -62,8 +62,8 @@ class InvoiceController extends Controller
                 ],
                 'amount' => $amount,
                 'items' => $items,
-                'failure_redirect_url' => route('invoice.showDetail', ['id' => $invoice->id]),
-                'success_redirect_url' => route('invoice.showDetail', ['id' => $invoice->id]),
+                'failure_redirect_url' => route('invoice.show', ['id' => $invoice->id]),
+                'success_redirect_url' => route('invoice.show', ['id' => $invoice->id]),
             ]);
 
             //instance api xendit
