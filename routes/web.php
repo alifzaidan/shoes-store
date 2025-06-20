@@ -3,6 +3,7 @@
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
@@ -16,12 +17,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cart/list', [CartController::class, 'getCart'])->name('cart.list');
     Route::post('/cart/{id}/cancel', [CartController::class, 'cancel'])->name('cart.cancel');
 
-    Route::get('/invoice/show', function () {
-        return Inertia::render('invoice');
-    })->name('invoice.show');
-    Route::get('/invoice/show/{id}', function () {
-        return Inertia::render('invoice-detail');
-    })->name('invoice.showDetail');
+    Route::get('/invoice', [InvoiceController::class, 'index'])->name('invoice.index');
+    Route::post('/invoice', [InvoiceController::class, 'store'])->name('invoice.store');
+    Route::get('/invoice/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
 });
 
 Route::middleware(['auth', EnsureAdmin::class])->group(function () {

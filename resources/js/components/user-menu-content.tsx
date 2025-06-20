@@ -28,7 +28,7 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
             <DropdownMenuGroup>
                 {user.role !== 'admin' && (
                     <DropdownMenuItem asChild>
-                        <Link className="block w-full" href={route('invoice.show')} as="button" prefetch onClick={cleanup}>
+                        <Link className="block w-full" href={route('invoice.index')} as="button" prefetch onClick={cleanup}>
                             <History className="mr-2" />
                             Riwayat Pembelian
                         </Link>

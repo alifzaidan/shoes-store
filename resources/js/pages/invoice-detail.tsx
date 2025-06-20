@@ -3,29 +3,31 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 
-const invoice = {
-    id: 1,
-    created_at: '2025-05-30 10:00:00',
-    total: 300000,
-    status: 'selesai',
-    alamat: 'Jl. Contoh No. 123, Jakarta',
-    items: [
-        {
-            id: 1,
-            product: { title: 'Sepatu Keren', image: 'contoh-sepatu.jpg' },
-            qty: 1,
-            price: 200000,
-        },
-        {
-            id: 2,
-            product: { title: 'Sandal Santai', image: 'contoh-sandal.jpg' },
-            qty: 2,
-            price: 50000,
-        },
-    ],
-};
+interface InvoiceProduct {
+    title: string;
+    image: string;
+}
+interface InvoiceItemDetail {
+    id: number;
+    product: InvoiceProduct;
+    quantity: number;
+    price: number;
+}
+interface InvoiceItem {
+    id: number;
+    amount: number;
+    status: string;
+    invoice_code: string;
+    invoice_url: string;
+    created_at: string;
+    items: InvoiceItemDetail[];
+}
 
-export default function InvoiceDetail() {
+interface InvoiceProps {
+    invoice: InvoiceItem;
+}
+
+export default function InvoiceDetail({ invoice }: InvoiceProps) {
     return (
         <AppLayout>
             <Head title={`Invoice #${invoice.id}`} />
@@ -34,10 +36,6 @@ export default function InvoiceDetail() {
                 <div className="mb-4 flex items-center justify-between">
                     <div className="text-muted-foreground text-sm">{new Date(invoice.created_at).toLocaleString('id-ID')}</div>
                     <Badge>{invoice.status}</Badge>
-                </div>
-                <div className="mb-4">
-                    <div className="font-semibold">Alamat Pengiriman</div>
-                    <div className="text-sm">{invoice.alamat}</div>
                 </div>
                 <div className="rounded-xl border p-4 shadow-sm">
                     <div className="divide-y">
@@ -51,21 +49,28 @@ export default function InvoiceDetail() {
                                 <div className="flex-1">
                                     <div className="font-medium">{item.product.title}</div>
                                     <div className="text-muted-foreground text-xs">
-                                        {item.qty} x Rp{item.price.toLocaleString('id-ID')}
+                                        {item.quantity} x Rp{item.price.toLocaleString('id-ID')}
                                     </div>
                                 </div>
-                                <div className="text-sm font-semibold">Rp{(item.qty * item.price).toLocaleString('id-ID')}</div>
+                                <div className="text-sm font-semibold">Rp{(item.quantity * item.price).toLocaleString('id-ID')}</div>
                             </div>
                         ))}
                     </div>
                     <div className="mt-3 flex items-center justify-between font-semibold">
                         <span>Total</span>
-                        <span>Rp{invoice.total.toLocaleString('id-ID')}</span>
+                        <span>Rp{invoice.amount.toLocaleString('id-ID')}</span>
                     </div>
                 </div>
                 <Button className="mt-6" variant={'outline'} asChild>
-                    <Link href={route('invoice.show')}>Kembali ke Riwayat</Link>
+                    <Link href={route('invoice.index')}>Kembali ke Riwayat</Link>
                 </Button>
+                {invoice.status === 'pending' && (
+                    <Button asChild variant={'destructive'} className="ml-2">
+                        <a href={invoice.invoice_url} target="_blank" rel="noopener noreferrer">
+                            Bayar
+                        </a>
+                    </Button>
+                )}
             </div>
         </AppLayout>
     );

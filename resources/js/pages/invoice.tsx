@@ -3,44 +3,31 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 
-const invoices = [
-    {
-        id: 1,
-        created_at: '2025-05-30 10:00:00',
-        total: 300000,
-        status: 'selesai',
-        items: [
-            {
-                id: 1,
-                product: { title: 'Sepatu Keren', image: 'contoh-sepatu.jpg' },
-                qty: 1,
-                price: 200000,
-            },
-            {
-                id: 2,
-                product: { title: 'Sandal Santai', image: 'contoh-sandal.jpg' },
-                qty: 2,
-                price: 50000,
-            },
-        ],
-    },
-    {
-        id: 2,
-        created_at: '2025-05-28 14:30:00',
-        total: 150000,
-        status: 'diproses',
-        items: [
-            {
-                id: 3,
-                product: { title: 'Sneakers Putih', image: 'contoh-sneakers.jpg' },
-                qty: 1,
-                price: 150000,
-            },
-        ],
-    },
-];
+interface InvoiceProduct {
+    title: string;
+    image: string;
+}
+interface InvoiceItemDetail {
+    id: number;
+    product: InvoiceProduct;
+    quantity: number;
+    price: number;
+}
+interface InvoiceItem {
+    id: number;
+    amount: number;
+    status: string;
+    invoice_code: string;
+    invoice_url: string;
+    created_at: string;
+    items: InvoiceItemDetail[];
+}
 
-export default function Invoice() {
+interface InvoiceProps {
+    invoices: InvoiceItem[];
+}
+
+export default function Invoice({ invoices }: InvoiceProps) {
     return (
         <AppLayout>
             <Head title="Riwayat Pembelian" />
@@ -54,7 +41,7 @@ export default function Invoice() {
                             <div key={invoice.id} className="rounded-xl border p-4 shadow-sm">
                                 <div className="mb-2 flex items-center justify-between">
                                     <div>
-                                        <div className="font-semibold">Invoice #{invoice.id}</div>
+                                        <div className="font-semibold">Invoice #{invoice.invoice_code}</div>
                                         <div className="text-muted-foreground text-xs">{new Date(invoice.created_at).toLocaleString('id-ID')}</div>
                                     </div>
                                     <Badge className="ml-2">{invoice.status}</Badge>
@@ -70,20 +57,27 @@ export default function Invoice() {
                                             <div className="flex-1">
                                                 <div className="font-medium">{item.product.title}</div>
                                                 <div className="text-muted-foreground text-xs">
-                                                    {item.qty} x Rp{item.price.toLocaleString('id-ID')}
+                                                    {item.quantity} x Rp{item.price.toLocaleString('id-ID')}
                                                 </div>
                                             </div>
-                                            <div className="text-sm font-semibold">Rp{(item.qty * item.price).toLocaleString('id-ID')}</div>
+                                            <div className="text-sm font-semibold">Rp{(item.quantity * item.price).toLocaleString('id-ID')}</div>
                                         </div>
                                     ))}
                                 </div>
                                 <div className="mt-3 flex items-center justify-between font-semibold">
                                     <span>Total</span>
-                                    <span>Rp{invoice.total.toLocaleString('id-ID')}</span>
+                                    <span>Rp{invoice.amount.toLocaleString('id-ID')}</span>
                                 </div>
                                 <Button className="mt-2" asChild>
-                                    <Link href={route('invoice.showDetail', invoice.id)}>Lihat Detail</Link>
+                                    <Link href={route('invoice.show', invoice.id)}>Lihat Detail</Link>
                                 </Button>
+                                {invoice.status === 'pending' && (
+                                    <Button asChild variant={'destructive'} className="ml-2">
+                                        <a href={invoice.invoice_url} target="_blank" rel="noopener noreferrer">
+                                            Bayar
+                                        </a>
+                                    </Button>
+                                )}
                             </div>
                         ))}
                     </div>

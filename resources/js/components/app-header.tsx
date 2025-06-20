@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import axios from 'axios';
 
 const mainNavItems: NavItem[] = [
     {
@@ -153,7 +154,17 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                                         .toLocaleString('id-ID')}
                                                                 </span>
                                                             </div>
-                                                            <Button className="mt-4 w-full" size="sm">
+                                                            <Button className="mt-4 w-full" size="sm"
+                                                                onClick={() => {
+                                                                    axios.post(route('invoice.store'))
+                                                                        .then(res => {
+                                                                            if (res.data.url) {
+                                                                                alert('Checkout berhasil! Mengarahkan ke pembayaran...');
+                                                                                window.dispatchEvent(new Event('cart-updated'))
+                                                                                window.location.href = res.data.url;
+                                                                            }
+                                                                        })
+                                                                }}>
                                                                 Checkout
                                                             </Button>
                                                         </>
@@ -167,7 +178,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                         </Sheet>
                     </div>
 
-                    <Link href="/dashboard" prefetch className="flex items-center space-x-2">
+                    <Link href="/" prefetch className="flex items-center space-x-2">
                         <AppLogo />
                     </Link>
 
@@ -260,7 +271,17 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                             .toLocaleString('id-ID')}
                                                     </span>
                                                 </div>
-                                                <Button className="mt-4 w-full" size="sm">
+                                                <Button className="mt-4 w-full" size="sm"
+                                                    onClick={() => {
+                                                        axios.post(route('invoice.store'))
+                                                            .then(res => {
+                                                                if (res.data.url) {
+                                                                    alert('Checkout berhasil! Mengarahkan ke pembayaran...');
+                                                                    window.dispatchEvent(new Event('cart-updated'))
+                                                                    window.location.href = res.data.url;
+                                                                }
+                                                            })
+                                                    }}>
                                                     Checkout
                                                 </Button>
                                             </>
