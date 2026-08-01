@@ -36,10 +36,11 @@ return [
     ],
 
     'payment_gateway' => [
-        'url' => env('PAYMENT_GATEWAY_URL', 'http://localhost:8080'),
-        'api_key' => env('PAYMENT_GATEWAY_API_KEY', 'test-api-key'),
-        'api_secret' => env('PAYMENT_GATEWAY_API_SECRET', 'test-api-secret'),
-        'webhook_secret' => env('PAYMENT_GATEWAY_WEBHOOK_SECRET', 'test-webhook-secret'),
+        'url'            => env('PAYMENT_GATEWAY_URL', 'http://localhost:8080'),
+        'api_key'        => env('PAYMENT_GATEWAY_API_KEY'),
+        'api_secret'     => env('PAYMENT_GATEWAY_API_SECRET'),
+        'webhook_secret' => env('PAYMENT_GATEWAY_WEBHOOK_SECRET'),
+        'is_production'  => env('PAYMENT_GATEWAY_IS_PRODUCTION', false),
     ],
 
 ];

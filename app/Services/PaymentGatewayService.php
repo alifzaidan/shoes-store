@@ -13,22 +13,64 @@ class PaymentGatewayService
     protected string $baseUrl;
     protected string $apiKey;
     protected string $apiSecret;
+    protected bool $isProduction;
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('services.payment_gateway.url', 'http://localhost:8080'), '/');
-        $this->apiKey = config('services.payment_gateway.api_key', 'test-api-key');
-        $this->apiSecret = config('services.payment_gateway.api_secret', 'test-api-secret');
+        $this->baseUrl      = rtrim(config('services.payment_gateway.url', 'http://localhost:8080'), '/');
+        $this->apiKey       = config('services.payment_gateway.api_key') ?? '';
+        $this->apiSecret    = config('services.payment_gateway.api_secret') ?? '';
+        $this->isProduction = (bool) config('services.payment_gateway.is_production', false);
+
+        if (empty($this->apiKey) || empty($this->apiSecret)) {
+            Log::warning('[PaymentGateway] API Key atau API Secret belum dikonfigurasi di .env');
+        }
     }
 
+    /**
+     * Base HTTP headers wajib untuk setiap request ke Payment Gateway API.
+     * - X-API-Key    : Identitas publik Merchant
+     * - X-API-Secret : Kunci rahasia Merchant (JANGAN bocorkan ke client-side)
+     */
     protected function headers(array $additional = []): array
     {
         return array_merge([
-            'X-API-Key' => $this->apiKey,
-            'X-API-Secret' => $this->apiSecret,
-            'Content-Type' => 'application/json',
+            'X-API-Key'       => $this->apiKey,
+            'X-API-Secret'    => $this->apiSecret,
+            'Content-Type'    => 'application/json',
+            'Accept'          => 'application/json',
             'Idempotency-Key' => 'IDEM-' . Str::uuid()->toString(),
         ], $additional);
+    }
+
+    /**
+     * Verifikasi Webhook Callback Signature menggunakan HMAC-SHA256.
+     * Gunakan ini di WebhookController sebelum memproses notifikasi masuk.
+     *
+     * @param  string $rawPayload  Raw body string dari request webhook
+     * @param  string $receivedSig Nilai header X-Signature dari request webhook
+     * @return bool
+     */
+    public function verifyWebhookSignature(string $rawPayload, string $receivedSig): bool
+    {
+        $webhookSecret = config('services.payment_gateway.webhook_secret');
+
+        if (empty($webhookSecret)) {
+            Log::error('[PaymentGateway] Webhook Secret belum dikonfigurasi di .env. Tolak semua callback masuk untuk keamanan.');
+            return false; // Strict mode: tolak jika secret belum dikonfigurasi
+        }
+
+        $computed = hash_hmac('sha256', $rawPayload, $webhookSecret);
+
+        return hash_equals($computed, $receivedSig);
+    }
+
+    /**
+     * Mode operasi: production atau sandbox/development
+     */
+    public function isProduction(): bool
+    {
+        return $this->isProduction;
     }
 
     /**
@@ -38,25 +80,30 @@ class PaymentGatewayService
     {
         $url = "{$this->baseUrl}/v1/payments";
         $payload = [
-            'external_id' => $order->order_number,
-            'payment_method' => $order->payment_method,
-            'amount' => (int) $order->amount,
-            'currency' => 'IDR',
-            'description' => "Pembelian {$order->shoe->name} (Order #{$order->order_number})",
-            'customer_name' => $order->customer_name,
-            'customer_email' => $order->customer_email,
-            'customer_phone' => $order->customer_phone ?: null,
+            'external_id'         => $order->order_number,
+            'payment_method'      => $order->payment_method,
+            'amount'              => (int) $order->amount,
+            'currency'            => 'IDR',
+            'description'         => "Pembelian {$order->shoe->name} (Order #{$order->order_number})",
+            'customer_name'       => $order->customer_name,
+            'customer_email'      => $order->customer_email,
+            'customer_phone'      => $order->customer_phone ?: null,
             'success_redirect_url' => route('orders.show', $order->id),
         ];
 
-        Log::info('Sending Create Payment request to Payment Gateway', ['url' => $url, 'payload' => $payload]);
+        Log::info('[PaymentGateway] Create Payment Request', [
+            'url'           => $url,
+            'is_production' => $this->isProduction,
+            'merchant_key'  => substr($this->apiKey, 0, 12) . '...', // Log partial key only
+            'payload'       => $payload,
+        ]);
 
         $response = Http::withHeaders($this->headers())->post($url, $payload);
 
         if ($response->failed()) {
-            Log::error('Payment Gateway Create Payment failed', [
+            Log::error('[PaymentGateway] Create Payment Failed', [
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'body'   => $response->body(),
             ]);
             $errorData = $response->json();
             throw new Exception($errorData['error'] ?? $errorData['message'] ?? 'Gagal membuat pembayaran di Payment Gateway');
@@ -72,14 +119,14 @@ class PaymentGatewayService
     {
         $url = "{$this->baseUrl}/v1/payments/{$paymentGatewayId}/cancel";
 
-        Log::info('Sending Cancel Payment request to Payment Gateway', ['payment_id' => $paymentGatewayId]);
+        Log::info('[PaymentGateway] Cancel Payment Request', ['payment_id' => $paymentGatewayId]);
 
         $response = Http::withHeaders($this->headers())->post($url);
 
         if ($response->failed()) {
-            Log::error('Payment Gateway Cancel Payment failed', [
+            Log::error('[PaymentGateway] Cancel Payment Failed', [
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'body'   => $response->body(),
             ]);
             $errorData = $response->json();
             throw new Exception($errorData['error'] ?? $errorData['message'] ?? 'Gagal membatalkan pembayaran di Payment Gateway');
@@ -99,14 +146,14 @@ class PaymentGatewayService
             'reason' => $reason ?: 'Permintaan refund dari pelanggan',
         ];
 
-        Log::info('Sending Refund request to Payment Gateway', ['payment_id' => $paymentGatewayId, 'payload' => $payload]);
+        Log::info('[PaymentGateway] Refund Request', ['payment_id' => $paymentGatewayId, 'payload' => $payload]);
 
         $response = Http::withHeaders($this->headers())->post($url, $payload);
 
         if ($response->failed()) {
-            Log::error('Payment Gateway Refund failed', [
+            Log::error('[PaymentGateway] Refund Failed', [
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'body'   => $response->body(),
             ]);
             $errorData = $response->json();
             throw new Exception($errorData['error'] ?? $errorData['message'] ?? 'Gagal memproses refund di Payment Gateway');

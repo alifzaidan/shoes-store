@@ -105,30 +105,14 @@ class OrderController extends Controller
 
     /**
      * View order details & payment status
+     *
+     * Status order HANYA diperbarui via webhook callback dari Payment Gateway.
+     * Tidak ada polling aktif ke Payment Gateway API agar konsisten dengan
+     * arsitektur event-driven dan keamanan verifikasi signature HMAC.
      */
     public function show(Order $order)
     {
         $order->load('shoe');
-
-        // Active sync with Payment Gateway API if status is PENDING
-        if ($order->payment_status === 'PENDING' && $order->payment_gateway_id) {
-            try {
-                $details = $this->paymentGatewayService->getPaymentDetails($order->payment_gateway_id);
-                if (isset($details['status']) && $details['status'] !== 'PENDING') {
-                    $updateData = ['payment_status' => $details['status']];
-                    if ($details['status'] === 'PAID') {
-                        $updateData['paid_at'] = $details['paid_at'] ?? now();
-                    } elseif ($details['status'] === 'CANCELLED') {
-                        $updateData['cancelled_at'] = now();
-                    } elseif ($details['status'] === 'REFUNDED') {
-                        $updateData['refunded_at'] = now();
-                    }
-                    $order->update($updateData);
-                }
-            } catch (Exception $e) {
-                // Ignore API sync errors gracefully
-            }
-        }
 
         return Inertia::render('shoes/OrderDetail', [
             'order' => $order,
