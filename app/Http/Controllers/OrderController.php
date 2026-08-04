@@ -63,7 +63,18 @@ class OrderController extends Controller
         ]);
 
         try {
-            $paymentRes = $this->paymentGatewayService->createPayment($order);
+            // Panggil API Payment Gateway untuk menerbitkan Invoice / Payment Link (Simpan ke tabel payment_links)
+            $linkRes = $this->paymentGatewayService->createPaymentLink([
+                'title'          => "Invoice {$shoe->name} (#{$order->order_number})",
+                'description'    => "Pembelian 1 pasang {$shoe->name}",
+                'amount'         => (int) $order->amount,
+                'type'           => 'SINGLE',
+                'customer_name'  => $order->customer_name,
+                'customer_email' => $order->customer_email,
+            ]);
+
+            // Panggil juga API createPayment untuk mendapatkan instant QRIS / VA data
+            $paymentRes = $this->paymentGatewayService->createPayment($order, $linkRes['id'] ?? null);
 
             $paymentDataRaw = $paymentRes['payment_data'] ?? null;
             $formattedPaymentData = [];
@@ -83,8 +94,13 @@ class OrderController extends Controller
                 }
             }
 
+            if (isset($linkRes['code'])) {
+                $formattedPaymentData['invoice_code'] = $linkRes['code'];
+                $formattedPaymentData['invoice_url'] = "http://localhost:5173/pay/" . $linkRes['code'];
+            }
+
             $order->update([
-                'payment_gateway_id' => $paymentRes['id'] ?? null,
+                'payment_gateway_id' => $paymentRes['id'] ?? $linkRes['id'] ?? null,
                 'payment_data' => $formattedPaymentData,
             ]);
 

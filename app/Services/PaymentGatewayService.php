@@ -76,11 +76,12 @@ class PaymentGatewayService
     /**
      * Create a payment invoice/transaction in Payment Gateway
      */
-    public function createPayment(Order $order): array
+    public function createPayment(Order $order, ?string $paymentLinkId = null): array
     {
         $url = "{$this->baseUrl}/v1/payments";
         $payload = [
             'external_id'         => $order->order_number,
+            'payment_link_id'     => $paymentLinkId ?: null,
             'payment_method'      => $order->payment_method,
             'amount'              => (int) $order->amount,
             'currency'            => 'IDR',
@@ -176,5 +177,41 @@ class PaymentGatewayService
         }
 
         return $response->json();
+    }
+
+    /**
+     * Create a payment link / invoice (SINGLE or REUSABLE) via Payment Gateway API
+     */
+    public function createPaymentLink(array $data): array
+    {
+        $url = "{$this->baseUrl}/v1/payment-links";
+        $payload = [
+            'title'          => $data['title'],
+            'description'    => $data['description'] ?? null,
+            'amount'         => (int) $data['amount'],
+            'type'           => strtoupper($data['type'] ?? 'SINGLE'), // SINGLE atau REUSABLE
+            'max_usage'      => isset($data['max_usage']) ? (int) $data['max_usage'] : null,
+            'expires_at'     => $data['expires_at'] ?? null,
+            'customer_name'  => $data['customer_name'] ?? null,
+            'customer_email' => $data['customer_email'] ?? null,
+        ];
+
+        Log::info('[PaymentGateway] Create Payment Link Request', [
+            'url'     => $url,
+            'payload' => $payload,
+        ]);
+
+        $response = Http::withHeaders($this->headers())->post($url, $payload);
+
+        if ($response->failed()) {
+            Log::error('[PaymentGateway] Create Payment Link Failed', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+            $errorData = $response->json();
+            throw new Exception($errorData['error'] ?? $errorData['message'] ?? 'Gagal membuat link pembayaran/invoice di Payment Gateway');
+        }
+
+        return $response->json()['data'] ?? $response->json();
     }
 }
